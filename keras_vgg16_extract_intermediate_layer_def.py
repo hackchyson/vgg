@@ -10,7 +10,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 ##################################
 
-def get_feature(img_path='data/photo/c.jpg', layer=4):
+def get_feature(img_path='data/paper/bim1.png', layer=4):
     # load image
 
     img = image.load_img(img_path, target_size=(224, 224))
@@ -28,7 +28,7 @@ def get_feature(img_path='data/photo/c.jpg', layer=4):
     # print(x.shape)
     # print(x[0, 0, 0, :])
 
-    img_path_bim = 'data/bim/1.png'
+    img_path_bim = 'data/paper/photo1.png'
     img_bim = image.load_img(img_path_bim, target_size=(224, 224))
     b = image.img_to_array(img_bim)
     b = np.expand_dims(b, axis=0)
@@ -85,6 +85,7 @@ def get_feature(img_path='data/photo/c.jpg', layer=4):
     base_model = VGG16(weights='imagenet', include_top=False, pooling='max')
     model = Model(inputs=base_model.input, outputs=base_model.get_layer('block' + str(layer) + '_pool').output)
     block_pool_features = model.predict(x)
+
     # visualize_feature_maps(block_pool_features)
     # visualize_feature_map(block_pool_features)
 
@@ -112,7 +113,7 @@ def get_feature(img_path='data/photo/c.jpg', layer=4):
 ##################################
 # similarity
 for i in range(1, 6):
-    a = get_feature('data/photo/c.jpg', layer=i)
-    b = get_feature('data/bim/1.png', layer=i)
+    a = get_feature('data/paper/bim2.png', layer=i)
+    b = get_feature('data/paper/photo1.png', layer=i)
     sim = cosine_similarity(a.reshape(1, -1), b.reshape(1, -1))
     print(sim)

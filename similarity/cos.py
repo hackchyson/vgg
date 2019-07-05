@@ -1,6 +1,8 @@
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 
+import pdb
+
 
 def cos_sim(mat1, mat2):
     return cosine_similarity(mat1.reshape(1, -1), mat2.reshape(1, -1))
@@ -14,6 +16,7 @@ def cos_sim(mat1, mat2):
 def max_sim(mat1, lst):
     tmp_max = cos_sim(mat1, lst[0])
     print('info: idx = 0', tmp_max)
+
     max_idx = 0
     for i in range(1, len(lst)):
         cur = cos_sim(mat1, lst[i])
@@ -35,4 +38,4 @@ def max_sim(mat1, lst):
 # dd = np.dot(mat, np.transpose(lst[0]))
 # ddd = np.linalg.norm(mat) * np.linalg.norm(lst[0])
 # print(dd, ddd)
-# print(dd/ddd)
+# print(dd / ddd)
