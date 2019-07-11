@@ -2,7 +2,6 @@ from keras.preprocessing import image
 import cv2
 from keras.applications.vgg16 import preprocess_input
 import matplotlib.pyplot as plt
-import pdb
 
 
 # pdb.set_trace()
@@ -25,3 +24,4 @@ cv2.waitKey(5000)
 
 plt.imshow(img)
 plt.show()
+             
