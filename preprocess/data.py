@@ -48,7 +48,11 @@ def load(path):
 
 
 if __name__ == '__main__':
-    save('/home/hack/PycharmProjects/vgg/data/bim/paper',
-         '/home/hack/PycharmProjects/vgg/data/bim/paper/data.npy',
-         '/home/hack/PycharmProjects/vgg/data/bim/paper/label.pickle',
-         '/home/hack/PycharmProjects/vgg/data/bim/paper/bims.pickle')
+    # save('/home/hack/PycharmProjects/vgg/data/bim/paper',
+    #      '/home/hack/PycharmProjects/vgg/data/bim/paper/data.npy',
+    #      '/home/hack/PycharmProjects/vgg/data/bim/paper/label.pickle',
+    #      '/home/hack/PycharmProjects/vgg/data/bim/paper/bims.pickle')
+    save('/home/hack/PycharmProjects/vgg/data/bim/1008',
+         '/home/hack/PycharmProjects/vgg/data/bim/1008/data.npy',
+         '/home/hack/PycharmProjects/vgg/data/bim/1008/label.pickle',
+         '/home/hack/PycharmProjects/vgg/data/bim/1008/bims.pickle')

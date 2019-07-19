@@ -29,10 +29,8 @@ def max_sim(mat, lst):
     max_idx = 0
     for i in range(1, len(lst)):
         cur = cos_sim(mat, lst[i])
-        print('info: idx = {}'.format(i), cur)
         if tmp_max < cur:
             tmp_max = cur
             max_idx = i
+    print('info: idx = {}; cosine similarity: {}'.format(max_idx, cos_sim(mat, lst[max_idx])))
     return max_idx, cos_sim(mat, lst[max_idx])
-
-

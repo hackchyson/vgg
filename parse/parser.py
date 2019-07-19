@@ -3,7 +3,8 @@ import json
 import os
 import logging
 
-logging.basicConfig(level=logging.INFO)
+
+# logging.basicConfig(level=logging.INFO)
 
 
 class Base64Parser:
@@ -45,31 +46,37 @@ class Base64Parser:
         :return: parsed image and a new filename.
         """
         with open(filename) as json_file:
-            data = json.load(json_file)
+            return self.parse_json(json_file, concat=concat)
 
-            img_base64 = data[self.IMG_URL]
+    def parse_list(self, filename, output_path, concat='--'):
+        with open(filename) as json_file:
+            for data in json.load(json_file):
+                img, new_filename = self.parse_json(data, concat=concat)
+                with open(os.path.join(output_path, new_filename), 'wb') as file:
+                    file.write(img)
 
-            eye_x = data[self.EYE][self.X]
-            eye_y = data[self.EYE][self.Y]
-            eye_z = data[self.EYE][self.Z]
+    def parse_json(self, data, concat='--'):
+        img_base64 = data[self.IMG_URL]
 
-            look_x = data[self.LOOK][self.X]
-            look_y = data[self.LOOK][self.Y]
-            look_z = data[self.LOOK][self.Z]
+        eye_x = data[self.EYE][self.X]
+        eye_y = data[self.EYE][self.Y]
+        eye_z = data[self.EYE][self.Z]
 
-            position = int(eye_x), int(eye_y), int(eye_z)
-            direction = int(look_x - eye_x), int(look_y - eye_y), int(look_z - eye_z)
-            logging.info("filename: {}; position: {}; direction: {}".format(filename, position, direction))
+        look_x = data[self.LOOK][self.X]
+        look_y = data[self.LOOK][self.Y]
+        look_z = data[self.LOOK][self.Z]
 
-            # print(img_base64)
+        position = int(eye_x), int(eye_y), int(eye_z)
+        direction = int(look_x - eye_x), int(look_y - eye_y), int(look_z - eye_z)
 
-            img_base64 = img_base64[self.START:]
-            # print(img_base64)
-            img = base64.b64decode(img_base64)
-            new_filename = str(position) + concat + str(direction) + '.png'
-            return img, new_filename
+        img_base64 = img_base64[self.START:]
+        img = base64.b64decode(img_base64)
+        new_filename = str(position) + concat + str(direction) + '.png'
+        return img, new_filename
 
 
 if __name__ == "__main__":
     parser = Base64Parser()
-    parser.walk('/home/hack/PycharmProjects/vgg/parse', '/home/hack/PycharmProjects/vgg/data/bim/1008')
+    # parser.walk('/home/hack/PycharmProjects/vgg/parse', '/home/hack/PycharmProjects/vgg/data/bim/1008')
+    parser.parse_list("/home/hack/PycharmProjects/vgg/data/bim/1008/allImageData(1).txt",
+                      "/home/hack/PycharmProjects/vgg/data/bim/1008")
