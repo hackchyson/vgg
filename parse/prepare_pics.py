@@ -6,7 +6,9 @@ import execjs
 import numpy as np
 import math
 import logging
+import threading
 import itertools
+from .parser import Base64Parser
 
 logging.basicConfig(level=logging.INFO)
 
@@ -20,6 +22,15 @@ Z = 'z'
 
 
 class Cap:
+    """
+    It is used for Json data format:
+    {
+    position:{x:1,y:2,z:3},
+    target:{x:1,y:2,z:3},
+    up:{x:0,y:0,z:1}
+    }
+    """
+
     def __init__(self, position, target, up):
         self.position = position
         self.target = target
@@ -34,6 +45,15 @@ class Point:
 
 
 def all_directions(point_from, point_to):
+    """
+    Given two 3-D points, the first is the "from" point, the second is the "to" point.
+    Compute 24 direction around the "from" point.
+    In the XOY plane, 8 directions divide the plane into 8 regions equally.
+    In the XOZ or YOZ plane, the angle between z axis x or y axis is -pi/4, 0, and pi/4 respectively.
+    :param point_from: Around this point, compute 24 directions.
+    :param point_to: the distance between "from" and "to" points is used as the direction end point.
+    :return: 24 points in 24 directions.
+    """
     from_x = point_from[X]
     from_y = point_from[Y]
     from_z = point_from[Z]
@@ -57,19 +77,30 @@ def all_directions(point_from, point_to):
 
 
 def get_data():
+    """
+    Get data from web.
+    :return: Json data needed.
+    """
     response = requests.get(url)
     text = response.text
     json_obj = json.loads(text)
-    bos_edges = json_obj['data']['bosEdges']
-    return bos_edges
+    return json_obj['data']['bosEdges']
 
 
-def filtered_points(bos_edges):
+def filtered_points(bos_edges, sample_distance=1000):
+    """
+    Among all the points, filter out points that the distance between them
+    is greater than the sample_distance.
+    :param bos_edges: Json data containing all the distances and points.
+    :param sample_distance: the filter condition that the distance
+    between two points must be greater than
+    :return: All the points meeting the distance condition.
+    """
     init = .0
     capture_points = []
     for edge in bos_edges:
         distance = float(edge[DISTANCE])
-        if distance + init > 1000:
+        if distance + init > sample_distance:
             capture_points.append(edge[TO])
             init = .0
         else:
@@ -77,15 +108,59 @@ def filtered_points(bos_edges):
     return capture_points
 
 
-if __name__ == "__main__":
-    bos_edges = get_data()
-    filtered = filtered_points(bos_edges)
-    logging.info(len(filtered))
+def flatten(filtered):
+    """
+    Flatten List[List] into List.
+    :param filtered: The object needed to be flatten.
+    :return: Flatten list.
+    """
     caps = []
     for i in range(len(filtered) - 1):
         cap = all_directions(filtered[i], filtered[i + 1])
         for j in cap:
             caps.append(j)
+    return caps
+
+
+def get_batch_pics(points, pic_dir="", js_function=""):
+    """
+    Convert a list of json point data into pictures and store them.
+    :param points: Point to capture a picture.
+    :param pic_dir: Path to store pictures.
+    :param js_function: JavaScript function name.
+    :return: None
+    """
+    file = open(pic_dir)
+    line = file.readline()
+    html_str = ''
+    while line:
+        html_str = html_str + line
+        line = file.readline()
+
+    ctx = execjs.compile(html_str)
+    batch_list = ctx.call(js_function, points)
+    Base64Parser().parse_json_list(batch_list, pic_dir)
+
+
+def get_pics(points, batch=1000):
+    """
+    Divide the point list into several list and run them in parallel.
+    :param points: A list of all points.
+    :param batch: A sub list of the points.
+    :return: None
+    """
+    num = len(points) // batch
+    for i in range(num - 1):
+        threading.Thread(target=get_batch_pics(points[num, num + 1]))
+    threading.Thread(target=get_batch_pics(points[num, len(points)]))
+
+
+if __name__ == "__main__":
+    bos_edges = get_data()
+    filtered = filtered_points(bos_edges)
+    logging.info(len(filtered))
+    caps = flatten(filtered)
     logging.info((len(filtered) - 1) * 24)
     logging.info(len(caps))
     logging.info(caps[0])
+    get_pics(filtered)

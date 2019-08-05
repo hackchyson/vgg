@@ -20,6 +20,13 @@ class Base64Parser:
         self.Z = 'z'
         self.START = len('data:image/png;base64,')
 
+    def parse_json_list(self, json_list_str, pics_dir, concat="--"):
+        json_list = json.loads(json_list_str)
+        for data in json_list:
+            img, new_filename = self.parse_json(data, concat=concat)
+            with open(os.path.join(pics_dir, new_filename), 'wb') as file:
+                file.write(img)
+
     def walk(self, input_path, output_path):
         """
         Scan the input path ,parse and store the pared image in output path.
