@@ -7,18 +7,11 @@ import numpy as np
 import math
 import logging
 import threading
+from config.config import *
 import itertools
-from .parser import Base64Parser
+from parse.pic_parser import Base64Parser
 
-logging.basicConfig(level=logging.INFO)
-
-url = "https://webapi.bos.xyz/models/170642112/routes/170652840/edges/point?devcode=e10e59bf0ee97213ca7104977877bd1a"
-
-DISTANCE = "distance"
-TO = 'to'
-X = 'x'
-Y = 'y'
-Z = 'z'
+logging.basicConfig(level=LEVEL)
 
 
 class Cap:
@@ -56,10 +49,10 @@ def all_directions(point_from, point_to):
     """
     from_x = point_from[X]
     from_y = point_from[Y]
-    from_z = point_from[Z]
+    from_z = point_from[Z] + HEIGHT
     to_x = point_to[X]
     to_y = point_to[Y]
-    to_z = point_to[Z]
+    to_z = point_to[Z] + HEIGHT
     dis = np.linalg.norm(np.array([to_x, to_y, to_z]) - np.array([from_x, from_y, from_z]))
     xys = []
     zs = [int(to_z - dis), int(to_z), int(to_z + dis)]
@@ -81,13 +74,13 @@ def get_data():
     Get data from web.
     :return: Json data needed.
     """
-    response = requests.get(url)
+    response = requests.get(URL)
     text = response.text
     json_obj = json.loads(text)
-    return json_obj['data']['bosEdges']
+    return json_obj[JSON_DATA][JSON_BOS_EDGES]
 
 
-def filtered_points(bos_edges, sample_distance=1000):
+def filtered_points(bos_edges, sample_distance=SAMPLE_DISTANCE):
     """
     Among all the points, filter out points that the distance between them
     is greater than the sample_distance.
@@ -122,27 +115,32 @@ def flatten(filtered):
     return caps
 
 
-def get_batch_pics(points, pic_dir="", js_function=""):
+def get_batch_pics(points, js_path=JS_PATH, js_function=JS_FUNC, pic_dir=PIC_DIR):
     """
     Convert a list of json point data into pictures and store them.
     :param points: Point to capture a picture.
     :param pic_dir: Path to store pictures.
     :param js_function: JavaScript function name.
+    :param js_path: javascript path.
     :return: None
     """
-    file = open(pic_dir)
+    file = open(js_path)
     line = file.readline()
     html_str = ''
     while line:
         html_str = html_str + line
         line = file.readline()
-
+    logging.debug(html_str)
     ctx = execjs.compile(html_str)
+    logging.debug(ctx)
+    logging.debug(js_path)
+    logging.debug(js_function)
     batch_list = ctx.call(js_function, points)
-    Base64Parser().parse_json_list(batch_list, pic_dir)
+    # print(batch_list)
+    # Base64Parser().parse_json_list(batch_list, pic_dir)
 
 
-def get_pics(points, batch=1000):
+def get_pics(points, batch=PARSE_BATCH_SIZE):
     """
     Divide the point list into several list and run them in parallel.
     :param points: A list of all points.
@@ -151,16 +149,23 @@ def get_pics(points, batch=1000):
     """
     num = len(points) // batch
     for i in range(num - 1):
-        threading.Thread(target=get_batch_pics(points[num, num + 1]))
-    threading.Thread(target=get_batch_pics(points[num, len(points)]))
+        threading.Thread(target=get_batch_pics(points[num: num + 1]))
+    threading.Thread(target=get_batch_pics(points[num: len(points)]))
+
+
+def save(list_json, json_file):
+    with open(json_file, 'w') as file:
+        file.write(list_json)
 
 
 if __name__ == "__main__":
     bos_edges = get_data()
     filtered = filtered_points(bos_edges)
-    logging.info(len(filtered))
+    logging.debug(len(filtered))
     caps = flatten(filtered)
-    logging.info((len(filtered) - 1) * 24)
-    logging.info(len(caps))
-    logging.info(caps[0])
-    get_pics(filtered)
+    logging.debug((len(filtered) - 1) * 24)
+    logging.debug(len(caps))
+    logging.debug(caps[0])
+    # get_pics(filtered)
+    json_list = json.dumps(caps)
+    save(json_list, 'caps.json')
