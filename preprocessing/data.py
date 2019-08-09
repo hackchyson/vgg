@@ -97,6 +97,6 @@ if __name__ == '__main__':
     #      '/home/hack/PycharmProjects/vgg/data/bim/paper/data.npy',
     #      '/home/hack/PycharmProjects/vgg/data/bim/paper/label.pickle',
     #      '/home/hack/PycharmProjects/vgg/data/bim/paper/bims.pickle')
-    save_for_train('/home/hack/bim/photo',
-                   '/home/hack/PycharmProjects/vgg/data/bim/1008/data',
-                   '/home/hack/PycharmProjects/vgg/data/bim/1008/label')
+    save_for_train('/home/hack/bim/train',
+                   '/home/hack/PycharmProjects/vgg/data/bim/703/data',
+                   '/home/hack/PycharmProjects/vgg/data/bim/703/label')
